@@ -22,7 +22,7 @@ def chatgpt(message):
         Возвращаем ответ нейросети
         """
         bot.send_message(message.chat.id, '⌛') #Песочные чатики для юзера, чтобы не подумал, что все сломалось
-        if message.text[0:7] == "imagine" or message.text[0:7] == "imagine": #Pic, если сообщение начинается с imagine
+        if message.text[0:7] == "imagine" or message.text[0:7] == "Imagine": #Pic, если сообщение начинается с imagine
                 response = openai.Image.create(
                         prompt= message.text, #Запрос к нейросети
                         n=1,
