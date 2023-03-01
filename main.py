@@ -1,10 +1,12 @@
 import telebot
 import openai
+import requests
 from settings import *
 
 
 bot = telebot.TeleBot(API_TOKEN) #Токен для телеграма
 openai.api_key = OPENAI_KEY #Ключ для OpenAI
+model = "gpt-3.5-turbo"
 
 @bot.message_handler(commands=["start"])
 def start(message):
@@ -35,17 +37,41 @@ def chatgpt(message):
                 text_input = str(message.text) #Принимаем текст из сообщения, преобразуем в строку
                 text_input = text_input.strip() #Убираем лишние пробелы
 
-                response = openai.Completion.create(
-                        engine="text-davinci-003", #Модель нейросети
-                        prompt= text_input, #Сам запрос
-                        temperature=0.3, #Параметр от 0 до 2, от более конкретной выдачи до полета фантазии
-                        max_tokens=1200, #Количество токенов, которое вернет нейросеть
-                        top_p=0.5, #Процент самых вероятных от возвращенных токенов
-                        frequency_penalty=0.2, #Снижает вероятность повторного использования слова в ответе нейросети
-                        presence_penalty=0, #Увеличивает вероятность использования слов из запроса в ответе
+                prompt = text_input #Запрос
+
+                json_data = {
+                        "model": model, #Модель (GPT3.5-Turbo
+                        "messages": [
+                                {
+                                        "role": "user",
+                                        "content": prompt
+                                }
+                        ]
+                }
+
+                response = requests.post(
+                        "https://api.openai.com/v1/chat/completions", #Запрос к API
+                        headers={
+                                "Content-Type": "application/json",
+                                "Authorization": f"Bearer {openai.api_key}"
+                        },
+                        json=json_data
                 )
 
-                answer = response["choices"][0]["text"] + "\n" #Получаем ответ от нейросети
+                if response.status_code == 200: #Если есть положительный ответ от сервера
+                        output = response.json()
+
+                        if "choices" in output:
+                                for choice in output["choices"]:
+                                        if "message" in choice and "content" in choice["message"]:
+                                                answer = choice["message"]["content"]
+
+                                        else:
+                                                bot.send_message(message.chat.id, 'Нет ответа от разума')
+                        else:
+                                bot.send_message(message.chat.id, 'Ошибка!')
+
+
                 bot.delete_message(message.chat.id, message.message_id + 1) #Удаляем временное сообщение с часами
                 bot.send_message(message.chat.id, answer.strip()) #Отправляем ответ пользователю
 
