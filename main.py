@@ -67,10 +67,11 @@ def chatgpt(message):
                                                 answer = choice["message"]["content"]
 
                                         else:
-                                                bot.send_message(message.chat.id, 'Нет ответа от разума')
+                                                answer = 'Нет ответа от разума'
                         else:
-                                bot.send_message(message.chat.id, 'Ошибка!')
-
+                                answer = 'Ошибка!'
+                else:
+                        answer = f'Ошибка {response.status_code} на сервере!'
 
                 bot.delete_message(message.chat.id, message.message_id + 1) #Удаляем временное сообщение с часами
                 bot.send_message(message.chat.id, answer.strip()) #Отправляем ответ пользователю
